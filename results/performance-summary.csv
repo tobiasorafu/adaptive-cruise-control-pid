@@ -1,0 +1,13 @@
+metric,value,unit
+Kp,1700,-
+Ki,500,-
+Kd,3000,-
+target_separation,20,m
+peak_separation,26.23,m
+settling_time,12.27,s
+final_separation,20.03,m
+actuator_saturation_limit,14800,N
+nonlinear_following_speed_at_50_mps_test,43,m/s
+nonlinear_separation_at_30_s,118,m
+hill_test_peak_separation,36,m
+hill_test_minimum_separation,6.6,m
