@@ -23,14 +23,14 @@ The vehicle velocity is integrated to obtain position, while the separation dist
 
 ```mermaid
 flowchart LR
-    R[Target separation\n20 m] --> E[Distance error]
+    R[Target separation<br/>20 m] --> E[Distance error]
     D[Measured separation] --> E
     E --> C[PID controller]
     C --> F[Traction force]
-    F --> V[Following vehicle\nK / (tau s + 1)]
+    F --> V[Following vehicle<br/>K / (tau s + 1)]
     VL[Lead vehicle velocity] --> S[Relative velocity]
     V --> S
-    S --> I[1 / s\nDistance dynamics]
+    S --> I[1 / s<br/>Distance dynamics]
     I --> D
 ```
 
