@@ -116,6 +116,14 @@ The next stage would focus on robustness rather than only improving the nominal 
 - add road-gradient compensation or feedforward control;
 - compare the fixed-gain PID design with a constraint-aware control approach such as MPC.
 
+## Full Technical Report
+
+The complete technical report, including derivations, simulation results and broader control-system analysis, is available on Google Drive:
+
+[View the full technical report](https://docs.google.com/document/d/1Cdw-OzZ-C8atRY8XP26fflwlz2mlE7tv/edit?usp=sharing)
+
+This repository focuses specifically on the adaptive cruise-control PID project.
+
 ## Repository Structure
 
 ```text
