@@ -4,18 +4,18 @@
 
 The adaptive cruise-control system uses separation distance as the controlled output. The controller adjusts the following vehicle's traction-force command so that the measured separation converges to a 20 m reference.
 
-The simplified vehicle dynamics are represented by
+The simplified vehicle dynamics are represented by:
 
-\[
+$$
 H(s)=\frac{K}{\tau s+1}
-\]
+$$
 
 where:
 
 - `K = 0.0028`
 - `tau = 3.87 s`
 
-The model is intentionally simple and was used for controller design and tuning before comparison with the nonlinear Simscape vehicle.
+The time constant was estimated from the 63% point of the simulated step response using `src/estimate_time_constant.m`.
 
 ## Final PID Gains
 
