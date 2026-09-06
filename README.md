@@ -2,7 +2,7 @@
 
 A MATLAB/Simulink control project for regulating the separation distance between a lead vehicle and a following vehicle using a PID controller.
 
-The project starts with a first-order vehicle model, tunes a PID spacing controller, evaluates the closed-loop response, and then compares the simplified model against a nonlinear Simscape vehicle. The comparison is used to identify where the controller performs well and where actuator limits and road disturbances become important.
+The project uses a first-order vehicle model for controller design, tunes the spacing controller against time-domain requirements, and then checks the result against a nonlinear Simscape vehicle to identify where the simplified model stops being reliable.
 
 ## Project Overview
 
@@ -14,18 +14,33 @@ The following vehicle is represented by the first-order model
 H(s)=\frac{K}{\tau s+1}
 \]
 
-with the identified parameters:
+with:
 
 - `K = 0.0028`
 - `tau = 3.87 s`
 
-The vehicle velocity is integrated to obtain position, and the separation distance is determined from the difference between the lead- and following-vehicle positions. A PID controller adjusts the traction-force command from the separation-distance error.
+The vehicle velocity is integrated to obtain position, while the separation distance is calculated from the difference between the lead- and following-vehicle positions. The PID controller adjusts traction force from the separation-distance error.
 
-![Adaptive cruise control block diagram](figures/acc-block-diagram.png)
+```mermaid
+flowchart LR
+    R[Target separation\n20 m] --> E[Distance error]
+    D[Measured separation] --> E
+    E --> C[PID controller]
+    C --> F[Traction force]
+    F --> V[Following vehicle\nK / (tau s + 1)]
+    VL[Lead vehicle velocity] --> S[Relative velocity]
+    V --> S
+    S --> I[1 / s\nDistance dynamics]
+    I --> D
+```
 
-## PID Controller
+## PID Tuning
 
-The controller was tuned iteratively by studying the effect of proportional, integral and derivative action on the separation response. Proportional-only control produced a weakly damped oscillatory response. Adding integral action reduced steady-state error but made the response less stable. Derivative action was then used to increase damping and reduce the oscillation.
+The controller was tuned iteratively by studying how proportional, integral and derivative action affected the separation response.
+
+- Proportional-only control produced a lightly damped oscillatory response.
+- Adding integral action reduced steady-state error but made the response less stable.
+- Derivative action increased damping and reduced the oscillation.
 
 The final controller gains were:
 
@@ -37,7 +52,7 @@ The final controller gains were:
 
 ## Closed-Loop Results
 
-The final tuning met the required separation-response limits.
+The final tuning met the required nominal separation-response limits.
 
 | Metric | Result |
 | --- | ---: |
@@ -46,29 +61,23 @@ The final tuning met the required separation-response limits.
 | Settling time | 12.27 s |
 | Final separation | 20.03 m |
 
-![PID separation response](figures/pid-separation-response.png)
-
-The response reaches the target without dropping below the 20 m reference after the peak, while the peak remains below 30 m.
+The response returned to the desired 20 m gap without dropping below the target after the peak, while the maximum separation remained below 30 m.
 
 ## Nonlinear Vehicle Validation
 
-The same controller was also evaluated using a nonlinear Simscape vehicle model.
+The same controller was then evaluated with a nonlinear Simscape vehicle model.
 
-![Simulink adaptive cruise control model](figures/simulink-acc-model.png)
+At a lead-vehicle demand of **50 m/s**, the nonlinear following vehicle stabilised near **43 m/s** because the traction force reached the **14,800 N actuator limit**. The simplified transfer-function model did not contain this saturation and therefore continued to predict a much better tracking response.
 
-At a lead-vehicle demand of **50 m/s**, the nonlinear following vehicle could only stabilise near **43 m/s** because the traction force reached the **14,800 N actuator limit**. The simplified transfer-function model did not include this saturation and therefore continued to track the demanded condition.
-
-![Transfer-function and Simscape comparison](figures/linear-vs-simscape.png)
-
-This comparison shows an important model limitation: the first-order approximation is useful around the operating range used for identification, but it should not be expected to predict behaviour accurately once actuator limits and stronger nonlinear effects dominate.
+The comparison exposed an important model limitation: the first-order approximation is useful around the operating range used for identification, but it does not accurately represent the vehicle once actuator saturation and stronger nonlinear effects dominate.
 
 ## Disturbance Test
 
 A hill disturbance was introduced to test the controller away from the nominal operating condition.
 
-![Hill disturbance response](figures/hill-disturbance-response.png)
+The separation increased to roughly **36 m**, later fell to about **6.6 m**, and continued oscillating around the 20 m reference without fully settling within the 30 s simulation.
 
-The disturbance caused large overshoot and undershoot in separation distance and the system did not fully settle within the 30 s simulation. This showed that the final nominal PID tuning was not sufficiently robust for strong road-gradient disturbances.
+This showed that the nominal PID tuning was not sufficiently robust for the hill-disturbance case.
 
 ## What This Project Demonstrates
 
@@ -80,41 +89,50 @@ The disturbance caused large overshoot and undershoot in separation distance and
 - Identification of actuator saturation and model-validity limits
 - Disturbance-response evaluation
 
-## Limitations
-
-The project also exposed several limitations that are useful for further development:
+## Limitations Identified
 
 - The linear vehicle model does not represent actuator saturation.
-- Controller performance degrades when the vehicle is operated far outside the identification range.
+- Controller performance degrades when the vehicle is operated well outside the model-identification range.
 - The nominal PID gains provide poor disturbance rejection during the hill test.
-- A fixed-gain PID controller cannot account for all changes in vehicle dynamics across a wide operating range.
+- A fixed-gain controller cannot account for all changes in vehicle behaviour across a wide operating range.
 
-## Future Work
+## Future Development
 
-The next development stage would focus on improving robustness rather than only retuning the nominal response. Useful extensions include:
+The next stage would focus on robustness rather than only improving the nominal response:
 
-- retuning the controller for realistic operating speeds and disturbances;
-- adding actuator-aware anti-windup protection;
-- testing gain scheduling across different vehicle speeds;
-- adding road-gradient compensation or feedforward control;
-- comparing the PID design with MPC or another constraint-aware controller.
+- retune the controller across realistic operating speeds and disturbances;
+- add actuator-aware anti-windup protection;
+- investigate gain scheduling for different vehicle speeds;
+- add road-gradient compensation or feedforward control;
+- compare the fixed-gain PID design with a constraint-aware control approach.
 
-## Project Structure
+## Repository Structure
 
 ```text
 adaptive-cruise-control-pid/
 ├── README.md
+├── src/
+│   └── pid_parameters.m
 ├── docs/
 │   └── model-and-results.md
-├── figures/
-│   ├── acc-block-diagram.png
-│   ├── simulink-acc-model.png
-│   ├── pid-separation-response.png
-│   ├── linear-vs-simscape.png
-│   └── hill-disturbance-response.png
 ├── results/
 │   └── performance-summary.csv
 └── .gitignore
+```
+
+## MATLAB Setup
+
+The `src/pid_parameters.m` script stores the identified first-order vehicle model, final PID gains, target separation and traction-force limit.
+
+```matlab
+K = 0.0028;
+tau = 3.87;
+vehiclePlant = tf(K, [tau 1]);
+
+Kp = 1700;
+Ki = 500;
+Kd = 3000;
+pidController = pid(Kp, Ki, Kd);
 ```
 
 ## Tools
